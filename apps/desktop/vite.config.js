@@ -3,7 +3,6 @@ import { sveltekit } from '@sveltejs/kit/vite'
 import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-// @ts-expect-error type error without @types/node package
 import process from 'node:process'
 
 const host = process.env.TAURI_DEV_HOST
