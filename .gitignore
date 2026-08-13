@@ -1,0 +1,43 @@
+# Node
+node_modules
+
+# SvelteKit / Vite
+apps/desktop/.svelte-kit
+apps/desktop/build
+dist
+
+# Rust / Tauri
+apps/desktop/src-tauri/target
+apps/desktop/src-tauri/gen/android/.gradle
+apps/desktop/src-tauri/gen/android/.idea
+apps/desktop/src-tauri/gen/android/app/build
+apps/desktop/src-tauri/gen/android/build
+apps/desktop/src-tauri/gen/android/local.properties
+apps/desktop/src-tauri/gen/android/**/*.apk
+apps/desktop/src-tauri/gen/android/**/*.aab
+apps/desktop/src-tauri/gen/android/**/*.keystore
+**/*.rs.bk
+
+# Camera agent
+services/camera/dist
+
+# Cross-compile / local
+.build
+.pnpm-store
+
+# Logs & OS
+logs
+*.log
+.DS_Store
+.fleet
+.idea
+
+# Env & local secrets
+.env
+.env.*
+!.env.example
+
+# Optional local notes
+CLAUDE.md
+PROJECT.MD
+api-examples/*

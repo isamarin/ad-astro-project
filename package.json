@@ -1,0 +1,26 @@
+{
+  "name": "astrostreamer",
+  "type": "module",
+  "private": true,
+  "version": "2026.8.0",
+  "description": "Remote Canon DSLR orchestrator (Tauri) + camera agent on SBC",
+  "scripts": {
+    "dev": "pnpm --filter desktop dev",
+    "dev:tauri": "pnpm --filter desktop tauri dev",
+    "dev:agent": "pnpm --filter astrostreamer-camera dev",
+    "build": "pnpm --filter desktop build",
+    "build:tauri": "pnpm --filter desktop tauri build",
+    "check": "pnpm --filter desktop check"
+  },
+  "packageManager": "pnpm@10.28.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "@parcel/watcher",
+      "cpu-features"
+    ]
+  }
+}
