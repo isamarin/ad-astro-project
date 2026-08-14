@@ -9,7 +9,7 @@ Versioning: [CalVer](https://calver.org/) `YYYY.MM.BUILD`.
 - **Architecture:** Tauri v2 + Svelte orchestrator; Pi runs camera agent only
 - Removed Nuxt UI (`app/`, `server/`), root app Docker image, MCP-on-Nuxt
 - Camera agent: in-process SSE `/events`, WHEP proxy, Open-Meteo for auto-timelapse
-- GitLab CI: validate Svelte build; package only `camera-armv7` image
+- **Git remote:** GitHub only (`isamarin/ad-astro-project`); removed GitLab remote/CI
 
 ### Added
 - GitHub Actions: desktop (macOS/Windows/Linux) and Android 12+ APK
@@ -20,5 +20,5 @@ Versioning: [CalVer](https://calver.org/) `YYYY.MM.BUILD`.
 ### Added
 - Versioning system (YYYY.MM.BUILD format)
 - Multi-platform Docker image builds (amd64, arm64, arm/v7)
-- GitLab CI release pipeline with downloadable artifacts
 - CHANGELOG.md
+

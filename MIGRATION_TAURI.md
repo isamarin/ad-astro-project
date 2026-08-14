@@ -10,7 +10,7 @@
 | Agent SSE + Open-Meteo + WHEP proxy | Done |
 | Compose without Nuxt | Done |
 | **Removed Nuxt `app/` + `server/` + root Dockerfile** | Done |
-| CI: no app image jobs | Done |
+| CI: GitHub Actions only (no GitLab) | Done |
 
 ## Still open
 

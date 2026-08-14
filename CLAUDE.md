@@ -1,5 +1,7 @@
 # AstroStreamer (agent notes)
 
+**Git:** https://github.com/isamarin/ad-astro-project only (`origin`).
+
 ## Architecture
 
 - **Orchestrator:** `apps/desktop` — Tauri v2 + SvelteKit SPA (PC/Android)

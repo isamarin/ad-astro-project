@@ -7,9 +7,6 @@ SBC_USER    ?= $(ORANGE_PI_ONE_USER_SSH)
 DEPLOY_PATH ?= /opt/astrostreamer
 SBC_SSH     := ssh $(SBC_USER)@$(SBC_IP)
 SBC_SCP     := scp -o StrictHostKeyChecking=no
-GITLAB_URL  ?= http://gitlab.blackmonkeys.netcraze.pro
-PROJECT_ID  ?= 4
-PKG_URL      = $(GITLAB_URL)/api/v4/projects/$(PROJECT_ID)/packages/generic/astrostreamer/$(VERSION)
 
 # === Orchestrator (Tauri + Svelte) ===
 JAVA_HOME      ?= /opt/homebrew/opt/openjdk@17
@@ -119,20 +116,10 @@ setup-pi:
 	$(SBC_SCP) scripts/setup-pi.sh $(SBC_USER)@$(SBC_IP):/tmp/
 	$(SBC_SSH) "chmod +x /tmp/setup-pi.sh && /tmp/setup-pi.sh"
 
-# === Release packages (agent image only) ===
-pull: $(BUILD_DIR)
-	@echo "Downloading camera agent $(VERSION)..."
-	curl -fL -o $(BUILD_DIR)/camera-armv7.tar $(PKG_URL)/camera-armv7.tar
-	@echo "Downloaded to $(BUILD_DIR)/"
-
+# Load a local agent image tarball (from make cross-build)
 load:
-	docker load < $(BUILD_DIR)/camera-armv7.tar
-	docker tag astrostreamer/camera:$(VERSION)-armv7 astrostreamer/camera:latest 2>/dev/null || true
-	@echo "Loaded camera agent as :latest"
-
-upgrade: pull load
-	docker compose up -d
-	@echo "Upgraded agent to $(VERSION)"
+	docker load < $(BUILD_DIR)/camera.tar
+	@echo "Loaded camera agent from $(BUILD_DIR)/camera.tar"
 
 tag:
 ifndef V
@@ -148,13 +135,4 @@ update:
 	desktop-build android-init android-build \
 	up down build logs logs-camera \
 	cross-setup cross-build deploy-push deploy-config deploy-start deploy-stop \
-	deploy-logs deploy-status deploy setup-pi pull load upgrade tag update
-
-git_github:
-	git remote set-url origin https://github.com/isamarin/ad-astro-project.git && git remote -v
-
-git_local:
-	git remote set-url origin http://192.168.1.127:8071/igrs/astrostreamer.git && git remote -v
-
-git_external:
-	git remote set-url origin http://109.161.57.231:9090/igrs/astrostreamer.git && git remote -v
+	deploy-logs deploy-status deploy setup-pi load tag update
