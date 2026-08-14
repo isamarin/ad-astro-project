@@ -5,6 +5,11 @@ Versioning: [CalVer](https://calver.org/) `YY.M.BUILD` (short year so Windows MS
 
 ## [Unreleased]
 
+### Changed
+- Camera is abstract in the orchestrator; Canon gphoto2 agent moved to [canon-adapter](https://github.com/lumina-stream/canon-adapter)
+- App owns `lumina.camera.v1` (`packages/shared`). Any adapter that implements it can connect.
+- Settings: Simulator or Remote adapter (probe `GET /adapter`). No vendor catalog.
+
 ### Fixed
 - Desktop CI Windows: app version major must be ≤ 255 — use `26.8.0` instead of `2026.8.0`
 

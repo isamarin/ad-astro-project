@@ -1,6 +1,6 @@
 import { derived, writable, get } from 'svelte/store'
 import type { EventEntry, EventKind } from '@astrostreamer/shared'
-import { agentApi } from '$lib/api/agent'
+import { cameraFor } from '$lib/camera'
 import { connection } from './connection'
 
 const SEED_EVENTS: EventEntry[] = [
@@ -9,14 +9,14 @@ const SEED_EVENTS: EventEntry[] = [
     time: '07:14:02',
     kind: 'system',
     message: 'Camera connected',
-    detail: 'Canon EOS 600D · USB (mock)'
+    detail: 'Simulator · no hardware'
   },
   {
     id: '2',
     time: '07:14:03',
     kind: 'system',
-    message: 'RTSP stream started',
-    detail: 'rtsp://agent:8554/canon'
+    message: 'Live view',
+    detail: 'simulator has no stream'
   },
   {
     id: '3',
@@ -56,10 +56,7 @@ export function clearEvents() {
 }
 
 export function addEvent(event: Omit<EventEntry, 'id'>) {
-  events.update((list) => [
-    { ...event, id: String(Date.now()) },
-    ...list
-  ])
+  events.update((list) => [{ ...event, id: String(Date.now()) }, ...list])
 }
 
 let eventSource: EventSource | null = null
@@ -68,14 +65,21 @@ export function connectSSE() {
   if (typeof window === 'undefined') return
   disconnectSSE()
 
-  if (get(connection).mock) {
+  const adapter = cameraFor(get(connection))
+  if (!adapter) {
+    sseConnected.set(false)
+    return
+  }
+
+  const url = adapter.eventsUrl()
+  if (!url) {
     if (get(events).length === 0) events.set([...SEED_EVENTS])
     sseConnected.set(true)
     return
   }
 
   try {
-    eventSource = new EventSource(agentApi.eventsUrl())
+    eventSource = new EventSource(url)
     eventSource.onopen = () => sseConnected.set(true)
     eventSource.onmessage = (msg) => {
       try {

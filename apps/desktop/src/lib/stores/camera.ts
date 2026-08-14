@@ -1,12 +1,14 @@
 import { writable, get } from 'svelte/store'
-import { agentApi } from '$lib/api/agent'
-import { connection } from './connection'
 import {
+  CAMERA_CONFIG,
   ISO_SCALE,
   SHUTTER_MAN,
   SHUTTER_AST,
-  WB_PRESETS
+  WB_PRESETS,
+  type Camera
 } from '@astrostreamer/shared'
+import { cameraFor } from '$lib/camera'
+import { connection } from './connection'
 
 export { ISO_SCALE, SHUTTER_MAN, SHUTTER_AST, WB_PRESETS }
 
@@ -18,17 +20,16 @@ export interface CameraState {
   wb: string
 }
 
-export interface CameraInfo {
-  model: string
-  lens: string
-  connected: boolean
-  streaming: boolean
+export interface CameraInfo extends Camera {
+  adapterId: string
 }
 
 const FIELD_TO_CONFIG: Record<string, string> = {
-  iso: 'iso',
-  shutter: 'shutterspeed',
-  wb: 'whitebalance'
+  iso: CAMERA_CONFIG.iso,
+  shutter: CAMERA_CONFIG.shutter,
+  wb: CAMERA_CONFIG.whitebalance,
+  aperture: CAMERA_CONFIG.aperture,
+  focus: CAMERA_CONFIG.focus
 }
 
 export const cameraState = writable<CameraState>({
@@ -40,47 +41,68 @@ export const cameraState = writable<CameraState>({
 })
 
 export const cameraInfo = writable<CameraInfo>({
-  model: 'EOS',
-  lens: 'Гелиос 44МС 58mm',
+  model: 'Camera',
+  lens: '',
+  serial: '',
   connected: false,
-  streaming: false
+  streaming: false,
+  adapterId: ''
 })
 
 export async function initCameraFromAgent() {
-  if (get(connection).mock) {
+  const settings = get(connection)
+  const adapter = cameraFor(settings)
+  if (!adapter) {
     cameraInfo.set({
-      model: 'EOS 600D (mock)',
-      lens: 'Гелиос 44МС 58mm',
-      connected: true,
-      streaming: false
+      model: 'Camera',
+      lens: '',
+      serial: '',
+      connected: false,
+      streaming: false,
+      adapterId: ''
     })
     return
   }
 
   try {
-    const status = await agentApi.status()
+    const status = await adapter.status()
     cameraInfo.set({
       model: status.model || 'Camera',
-      lens: status.lens || 'Гелиос 44МС 58mm',
+      lens: status.lens || '',
+      serial: status.serial || '',
       connected: status.connected,
-      streaming: status.streaming
+      streaming: status.streaming,
+      adapterId: status.adapter || settings.manifest?.id || settings.source
     })
   } catch {
-    cameraInfo.update((c) => ({ ...c, connected: false, streaming: false }))
+    cameraInfo.update((c) => ({
+      ...c,
+      connected: false,
+      streaming: false,
+      adapterId: settings.manifest?.id || settings.source
+    }))
+    return
   }
 
-  const keys = ['iso', 'shutterspeed', 'whitebalance'] as const
-  const fieldMap: Record<string, keyof CameraState> = {
-    iso: 'iso',
-    shutterspeed: 'shutter',
-    whitebalance: 'wb'
-  }
-  for (const key of keys) {
+  if (!settings.manifest && settings.source === 'remote') {
     try {
-      const result = await agentApi.getConfig(key)
-      const val = result.value
-      if (val !== undefined) {
-        cameraState.update((s) => ({ ...s, [fieldMap[key]]: String(val) }))
+      const manifest = await adapter.manifest()
+      connection.patch({ manifest, streamPath: manifest.streamPath })
+    } catch {
+      /* handshake later */
+    }
+  }
+
+  const fieldMap: Record<string, keyof CameraState> = {
+    [CAMERA_CONFIG.iso]: 'iso',
+    [CAMERA_CONFIG.shutter]: 'shutter',
+    [CAMERA_CONFIG.whitebalance]: 'wb'
+  }
+  for (const key of Object.keys(fieldMap)) {
+    try {
+      const result = await adapter.getConfig(key)
+      if (result.value !== undefined) {
+        cameraState.update((s) => ({ ...s, [fieldMap[key]]: String(result.value) }))
       }
     } catch {
       /* keep defaults */
@@ -90,13 +112,14 @@ export async function initCameraFromAgent() {
 
 export async function setCamPatch(patch: Partial<CameraState>) {
   cameraState.update((s) => ({ ...s, ...patch }))
-  if (get(connection).mock) return
+  const adapter = cameraFor(get(connection))
+  if (!adapter) return
 
   for (const [field, value] of Object.entries(patch)) {
     const configKey = FIELD_TO_CONFIG[field]
     if (!configKey) continue
     try {
-      await agentApi.setConfig(configKey, String(value))
+      await adapter.setConfig(configKey, String(value))
     } catch (err) {
       console.error(`Failed to set ${configKey}=${value}:`, err)
     }
@@ -104,8 +127,9 @@ export async function setCamPatch(patch: Partial<CameraState>) {
 }
 
 export async function captureFrame() {
-  if (get(connection).mock) {
-    return { ok: true, filename: 'MOCK.JPG', size: '0', format: 'JPEG', path: '' }
+  const adapter = cameraFor(get(connection))
+  if (!adapter) {
+    return { ok: false, filename: '', size: '0', format: '', path: '' }
   }
-  return agentApi.capture()
+  return adapter.capture()
 }

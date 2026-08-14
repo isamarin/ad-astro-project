@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Snippet } from 'svelte'
   import type { AppMode } from '@astrostreamer/shared'
-  import { agentApi } from '$lib/api/agent'
-  import { connection } from '$lib/stores/connection'
+  import { cameraFor } from '$lib/camera'
+  import { connection, selectedAdapter } from '$lib/stores/connection'
   import { onDestroy } from 'svelte'
 
   interface Props {
@@ -10,16 +10,26 @@
     streamPath?: string
     children?: Snippet
   }
-  let { mode = 'manual', streamPath = 'canon', children }: Props = $props()
+  let { mode = 'manual', streamPath, children }: Props = $props()
 
   let videoEl: HTMLVideoElement | undefined = $state()
-  let status = $state<'connecting' | 'live' | 'error' | 'mock'>('connecting')
+  let status = $state<'connecting' | 'live' | 'error' | 'idle'>('connecting')
+  let idleReason = $state('')
   let pc: RTCPeerConnection | null = null
   let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 
   async function connect() {
-    if ($connection.mock) {
-      status = 'mock'
+    const adapter = cameraFor($connection)
+    const whep = adapter?.whepUrl(streamPath || $connection.streamPath || 'live') ?? null
+    const liveView = $selectedAdapter?.capabilities.liveView ?? false
+
+    if (!adapter || !whep || !liveView) {
+      status = 'idle'
+      idleReason = !adapter
+        ? 'Choose a camera adapter'
+        : !liveView
+          ? `${$selectedAdapter?.name ?? 'Adapter'} has no live view`
+          : 'No stream URL'
       cleanup()
       return
     }
@@ -67,11 +77,10 @@
         })
       }
 
-      const path = streamPath || $connection.streamPath
       const headers: Record<string, string> = { 'Content-Type': 'application/sdp' }
       if ($connection.apiKey) headers['X-Api-Key'] = $connection.apiKey
 
-      const response = await fetch(agentApi.whepUrl(path), {
+      const response = await fetch(whep, {
         method: 'POST',
         headers,
         body: peer.localDescription?.sdp
@@ -107,10 +116,11 @@
   })
 
   $effect(() => {
-    // reconnect when connection settings change
     void $connection.host
     void $connection.cameraPort
-    void $connection.mock
+    void $connection.source
+    void $connection.streamPath
+    void $selectedAdapter?.capabilities.liveView
     void streamPath
     if (typeof window === 'undefined') return
     clearTimeout(reconnectTimeout)
@@ -146,9 +156,9 @@
       class="absolute inset-0 flex flex-col items-center justify-center gap-2 z-[2]"
       style="color: var(--ink-3)"
     >
-      {#if status === 'mock'}
-        <span class="font-display text-2xl" style="color: var(--accent-3)">mock sky</span>
-        <span class="text-sm font-mono">No stream — mock mode</span>
+      {#if status === 'idle'}
+        <span class="font-display text-2xl" style="color: var(--accent-3)">no live view</span>
+        <span class="text-sm font-mono">{idleReason}</span>
       {:else if status === 'connecting'}
         <span class="text-sm font-mono">Подключение к стриму...</span>
       {:else}

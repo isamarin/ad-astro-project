@@ -12,15 +12,23 @@
   import { mode } from '$lib/stores/mode'
   import { initCameraFromAgent } from '$lib/stores/camera'
   import { connectSSE, disconnectSSE } from '$lib/stores/events'
+  import { cameraCapabilities, needsAdapter } from '$lib/stores/connection'
   import { isActive as timelapseActive, initTimelapse, cleanupTimelapse } from '$lib/stores/timelapse'
 
   let settingsOpen = $state(false)
+  let settingsRequired = $derived($needsAdapter)
   let capturing = $state(false)
   let detectActive = $state(false)
   let eventLogOpen = $state(false)
   let rightPanelTab = $state<'activity' | 'timelapse'>('activity')
+  const showTimelapse = $derived($cameraCapabilities?.timelapse !== false)
+
+  $effect(() => {
+    if (!showTimelapse && rightPanelTab === 'timelapse') rightPanelTab = 'activity'
+  })
 
   onMount(() => {
+    if ($needsAdapter) settingsOpen = true
     connectSSE()
     initCameraFromAgent()
     initTimelapse()
@@ -88,6 +96,7 @@
               ></span>
             {/if}
           </button>
+          {#if showTimelapse}
           <button
             type="button"
             class="flex-1 font-mono text-[11px] font-semibold px-3 py-2 relative flex items-center justify-center gap-1.5"
@@ -108,6 +117,7 @@
               ></span>
             {/if}
           </button>
+          {/if}
         </div>
         {#if rightPanelTab === 'activity'}
           <EventLog />
@@ -131,6 +141,7 @@
       >
         Activity
       </button>
+      {#if showTimelapse}
       <button
         type="button"
         class="font-mono text-[11px] font-semibold px-3 py-2 rounded-lg shadow-lg relative"
@@ -142,6 +153,7 @@
       >
         Timelapse
       </button>
+      {/if}
     </div>
   {/if}
 
@@ -164,12 +176,14 @@
             style="color: {rightPanelTab === 'activity' ? 'var(--ink-0)' : 'var(--ink-3)'}"
             onclick={() => (rightPanelTab = 'activity')}>Activity</button
           >
+          {#if showTimelapse}
           <button
             type="button"
             class="flex-1 font-mono text-[11px] font-semibold px-3 py-2"
             style="color: {rightPanelTab === 'timelapse' ? 'var(--ink-0)' : 'var(--ink-3)'}"
             onclick={() => (rightPanelTab = 'timelapse')}>Timelapse</button
           >
+          {/if}
           <button
             type="button"
             class="p-2"
@@ -187,4 +201,8 @@
   {/if}
 </div>
 
-<SettingsPanel open={settingsOpen} onClose={() => (settingsOpen = false)} />
+<SettingsPanel
+  open={settingsOpen || settingsRequired}
+  required={settingsRequired}
+  onClose={() => (settingsOpen = false)}
+/>

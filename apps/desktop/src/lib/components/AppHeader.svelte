@@ -1,7 +1,7 @@
 <script lang="ts">
   import ModeSwitcher from './ModeSwitcher.svelte'
   import { cameraInfo } from '$lib/stores/camera'
-  import { connection } from '$lib/stores/connection'
+  import { connection, selectedAdapter } from '$lib/stores/connection'
 
   interface Props {
     onSettings?: () => void
@@ -37,7 +37,8 @@
       class="hidden md:inline font-mono text-[10px] px-2 py-0.5 rounded-full"
       style="background: var(--bg-3); color: var(--ink-3)"
     >
-      v{version} · {$connection.mock ? 'mock' : $connection.host}
+      v{version} · {$selectedAdapter?.name ?? 'no adapter'}{#if $connection.source === 'remote'}
+        · {$connection.host}{/if}
     </span>
   </div>
 

@@ -11,6 +11,7 @@
     SHUTTER_AST,
     WB_PRESETS
   } from '$lib/stores/camera'
+  import { cameraCapabilities } from '$lib/stores/connection'
 
   interface Props {
     mode: AppMode
@@ -26,6 +27,7 @@
   }: Props = $props()
 
   const shutterOptions = $derived(mode === 'astro' ? [...SHUTTER_AST] : [...SHUTTER_MAN])
+  const caps = $derived($cameraCapabilities)
 
   async function onCapture() {
     onCapturing?.(true)
@@ -47,10 +49,13 @@
         style="color: var(--ink-1)">Camera</span
       >
       <span class="font-mono text-[9px]" style="color: var(--ink-3)">{$cameraInfo.model}</span>
-      <span class="font-mono text-[9px]" style="color: var(--ink-3)">{$cameraInfo.lens}</span>
+      {#if $cameraInfo.lens}
+        <span class="font-mono text-[9px]" style="color: var(--ink-3)">{$cameraInfo.lens}</span>
+      {/if}
     </div>
 
     <div class="lg:col-span-7 flex flex-wrap items-start gap-4 lg:gap-5">
+      {#if caps?.exposure !== false}
       <ValueStepper
         label="ISO"
         value={$cameraState.iso}
@@ -70,8 +75,10 @@
         <span class="font-mono text-sm font-semibold" style="color: var(--ink-2)"
           >ƒ/{$cameraState.aperture}</span
         >
-        <span class="font-mono text-[9px]" style="color: var(--ink-3)">fixed lens</span>
+        <span class="font-mono text-[9px]" style="color: var(--ink-3)">from adapter</span>
       </div>
+      {/if}
+      {#if caps?.focus}
       <div class="flex flex-col gap-1.5 min-w-[100px]">
         <span class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--ink-3)"
           >Focus</span
@@ -91,6 +98,8 @@
           <span>∞</span>
         </div>
       </div>
+      {/if}
+      {#if caps?.exposure !== false}
       <div class="flex flex-col gap-1.5">
         <span class="font-mono text-[10px] uppercase tracking-wider" style="color: var(--ink-3)"
           >White Balance</span
@@ -114,9 +123,11 @@
           {/each}
         </div>
       </div>
+      {/if}
     </div>
 
     <div class="lg:col-span-3 flex flex-row lg:flex-col items-center lg:items-end gap-2">
+      {#if caps?.stillCapture !== false}
       <button
         type="button"
         class="capture-btn flex items-center gap-2 font-mono text-[12px] font-semibold px-4 py-2 rounded-lg"
@@ -125,6 +136,7 @@
       >
         ◉ Capture
       </button>
+      {/if}
       {#if mode === 'astro'}
         <button
           type="button"

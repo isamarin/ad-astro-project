@@ -1,6 +1,6 @@
 import { derived, writable, get } from 'svelte/store'
 import type { Session, SessionConfig } from '@astrostreamer/shared'
-import { agentApi } from '$lib/api/agent'
+import { cameraFor } from '$lib/camera'
 import { connection } from './connection'
 
 export const currentSession = writable<Session | null>(null)
@@ -9,22 +9,22 @@ export const loading = writable(false)
 export const autoEnabled = writable(false)
 
 export const isActive = derived(currentSession, ($s) =>
-  Boolean(
-    $s && ($s.status === 'capturing' || $s.status === 'preparing')
-  )
+  Boolean($s && ($s.status === 'capturing' || $s.status === 'preparing'))
 )
 
-export const isProcessing = derived(
-  currentSession,
-  ($s) => $s?.status === 'processing'
-)
+export const isProcessing = derived(currentSession, ($s) => $s?.status === 'processing')
 
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
+function adapter() {
+  return cameraFor(get(connection))
+}
+
 async function fetchStatus() {
-  if (get(connection).mock) return
+  const cam = adapter()
+  if (!cam) return
   try {
-    const data = await agentApi.timelapseStatus()
+    const data = await cam.timelapseStatus()
     if ('id' in data) currentSession.set(data)
   } catch {
     /* ignore */
@@ -32,9 +32,10 @@ async function fetchStatus() {
 }
 
 export async function fetchSessions() {
-  if (get(connection).mock) return
+  const cam = adapter()
+  if (!cam) return
   try {
-    sessions.set(await agentApi.timelapseSessions())
+    sessions.set(await cam.timelapseSessions())
   } catch {
     /* ignore */
   }
@@ -47,9 +48,7 @@ function startPolling() {
     const s = get(currentSession)
     if (
       !s ||
-      (s.status !== 'capturing' &&
-        s.status !== 'preparing' &&
-        s.status !== 'processing')
+      (s.status !== 'capturing' && s.status !== 'preparing' && s.status !== 'processing')
     ) {
       stopPolling()
       await fetchSessions()
@@ -65,38 +64,24 @@ function stopPolling() {
 }
 
 export async function startTimelapse(config: SessionConfig) {
+  const cam = adapter()
+  if (!cam) return
   loading.set(true)
   try {
-    if (get(connection).mock) {
-      currentSession.set({
-        id: 'mock',
-        config,
-        status: 'capturing',
-        startedAt: new Date().toISOString(),
-        framesDir: '/tmp',
-        framesCaptured: 0,
-        failedFrames: 0
-      })
-      return
-    }
-    const session = await agentApi.timelapseStart(config)
+    const session = await cam.startTimelapse(config)
     currentSession.set(session)
-    startPolling()
+    if (cam.kind === 'remote') startPolling()
   } finally {
     loading.set(false)
   }
 }
 
 export async function stopTimelapse() {
+  const cam = adapter()
+  if (!cam) return
   loading.set(true)
   try {
-    if (get(connection).mock) {
-      currentSession.update((s) =>
-        s ? { ...s, status: 'stopped', stoppedAt: new Date().toISOString() } : s
-      )
-      return
-    }
-    const session = await agentApi.timelapseStop()
+    const session = await cam.stopTimelapse()
     if ('id' in session) currentSession.set(session)
   } finally {
     loading.set(false)
@@ -104,21 +89,15 @@ export async function stopTimelapse() {
 }
 
 export async function toggleAuto(enabled: boolean) {
-  if (!get(connection).mock) {
-    await agentApi.timelapseAuto(enabled)
-  }
+  const cam = adapter()
+  if (cam) await cam.setTimelapseAuto(enabled)
   autoEnabled.set(enabled)
 }
 
 export function initTimelapse() {
   fetchStatus().then(() => {
     const s = get(currentSession)
-    if (
-      s &&
-      (s.status === 'capturing' ||
-        s.status === 'preparing' ||
-        s.status === 'processing')
-    ) {
+    if (s && (s.status === 'capturing' || s.status === 'preparing' || s.status === 'processing')) {
       startPolling()
     }
   })

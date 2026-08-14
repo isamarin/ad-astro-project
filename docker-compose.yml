@@ -1,44 +1,12 @@
+# Local MediaMTX only. Camera adapters ship their own stack
+# (see https://github.com/lumina-stream/canon-adapter).
 services:
   mediamtx:
     image: bluenviron/mediamtx:1
-    platform: linux/arm/v7
     container_name: mediamtx
     restart: unless-stopped
-    network_mode: host
-    environment:
-      MTX_WEBRTCADDITIONALHOSTS: ${SBC_IP:-192.168.1.70}
-      MTX_API: "yes"
-
-  # Remote camera agent only — no Nuxt UI on the Pi.
-  # Orchestrator is Tauri app on PC / Android.
-  camera:
-    image: astrostreamer/camera:latest
-    build: ./services/camera
-    container_name: camera
-    restart: unless-stopped
-    network_mode: host
-    privileged: true
-    volumes:
-      - /dev/bus/usb:/dev/bus/usb
-      - captures:/tmp/captures
-    environment:
-      PORT: 3001
-      MEDIAMTX_RTSP_URL: rtsp://127.0.0.1:8554/canon
-      MEDIAMTX_WEBRTC_URL: http://127.0.0.1:8889
-      INTERNAL_API_KEY: ${INTERNAL_API_KEY:-}
-      SMTP_HOST: ${SMTP_HOST:-}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER:-}
-      SMTP_PASS: ${SMTP_PASS:-}
-      SMTP_FROM: ${SMTP_FROM:-}
-      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
-      AUTO_TIMELAPSE: ${AUTO_TIMELAPSE:-false}
-      DAILY_REPORT_HOUR: ${DAILY_REPORT_HOUR:-8}
-      OBSERVER_LAT: ${OBSERVER_LAT:-57.6261}
-      OBSERVER_LON: ${OBSERVER_LON:-39.8845}
-      TIMEZONE_OFFSET: ${TIMEZONE_OFFSET:-3}
-    depends_on:
-      - mediamtx
-
-volumes:
-  captures:
+    ports:
+      - "8554:8554"
+      - "8889:8889"
+      - "8890:8890/udp"
+      - "9997:9997"

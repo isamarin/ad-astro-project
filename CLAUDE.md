@@ -1,27 +1,21 @@
-# AstroStreamer (agent notes)
+# Lumina (agent notes)
 
-**Git:** https://github.com/isamarin/ad-astro-project only (`origin`).
+**Git:** https://github.com/lumina-stream/lumina (`origin`).
 
 ## Architecture
 
 - **Orchestrator:** `apps/desktop` — Tauri v2 + SvelteKit SPA (PC/Android)
-- **Agent:** `services/camera` — Node gphoto2 service on Orange Pi
-- **Media:** MediaMTX (RTSP/WebRTC), host network on Pi
-- **No Nuxt.** No UI process on the Pi.
+- **Camera interface:** `packages/shared` — `CameraAdapter`, `lumina.camera.v1`
+- **Adapters:** any process that implements the interface. Spec: `packages/shared/PROTOCOL.md`
+- **Reference:** https://github.com/lumina-stream/canon-adapter
+- **No vendor camera code in this repo.**
 
 ## Commands
 
 ```bash
 pnpm install
-pnpm dev:tauri              # orchestrator
+pnpm dev:tauri
 pnpm --filter desktop build
-make deploy                 # cross-build camera + push to Pi
 ```
 
-## Agent API (port 3001)
-
-`/status`, `/config/*`, `/capture`, `/events` (SSE), `/whep/:path`, `/timelapse/*`
-
-## UI
-
-Deep Space palette, modes: chill | manual | astro. Connection settings in-app (host, ports, mock).
+Settings: Simulator (built-in `CameraAdapter`) or Remote adapter (`GET /adapter` handshake).

@@ -18,9 +18,6 @@ apps/desktop/src-tauri/gen/android/**/*.aab
 apps/desktop/src-tauri/gen/android/**/*.keystore
 **/*.rs.bk
 
-# Camera agent
-services/camera/dist
-
 # Cross-compile / local
 .build
 .pnpm-store
