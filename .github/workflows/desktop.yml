@@ -62,8 +62,8 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
-          releaseBody: Star Watcher desktop build.
+          releaseName: Lumina ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+          releaseBody: Lumina desktop build.
           releaseDraft: true
           prerelease: ${{ github.ref_type != 'tag' }}
           includeDebug: false
