@@ -2,7 +2,7 @@
   "name": "astrostreamer",
   "type": "module",
   "private": true,
-  "version": "2026.8.0",
+  "version": "26.8.0",
   "description": "Remote Canon DSLR orchestrator (Tauri) + camera agent on SBC",
   "scripts": {
     "dev": "pnpm --filter desktop dev",

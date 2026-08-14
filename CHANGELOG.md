@@ -1,9 +1,12 @@
 # Changelog
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/).
-Versioning: [CalVer](https://calver.org/) `YYYY.MM.BUILD`.
+Versioning: [CalVer](https://calver.org/) `YY.M.BUILD` (short year so Windows MSI/WiX accepts major ≤ 255).
 
 ## [Unreleased]
+
+### Fixed
+- Desktop CI Windows: app version major must be ≤ 255 — use `26.8.0` instead of `2026.8.0`
 
 ### Changed
 - **Architecture:** Tauri v2 + Svelte orchestrator; Pi runs camera agent only

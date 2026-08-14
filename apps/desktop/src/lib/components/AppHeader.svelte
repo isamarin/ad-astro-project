@@ -8,7 +8,7 @@
   }
   let { onSettings }: Props = $props()
 
-  const version = '2026.8.0'
+  const version = '26.8.0'
 </script>
 
 <header

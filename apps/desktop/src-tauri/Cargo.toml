@@ -1,6 +1,6 @@
 [package]
 name = "astrostreamer"
-version = "2026.8.0"
+version = "26.8.0"
 description = "AstroStreamer Star Watcher orchestrator"
 authors = ["igrs"]
 edition = "2021"

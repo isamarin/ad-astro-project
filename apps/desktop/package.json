@@ -1,6 +1,6 @@
 {
   "name": "desktop",
-  "version": "2026.8.0",
+  "version": "26.8.0",
   "description": "AstroStreamer Tauri orchestrator — Star Watcher",
   "type": "module",
   "scripts": {
