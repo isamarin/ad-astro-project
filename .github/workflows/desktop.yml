@@ -62,8 +62,8 @@ jobs:
           tauriScript: pnpm tauri
           args: ${{ matrix.args }}
           tagName: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
-          releaseName: AstroStreamer ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
-          releaseBody: Desktop orchestrator build.
+          releaseName: ${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}
+          releaseBody: Star Watcher desktop build.
           releaseDraft: true
           prerelease: ${{ github.ref_type != 'tag' }}
           includeDebug: false

@@ -55,7 +55,7 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: astrostreamer-android-arm64
+          name: star-watcher-android-arm64
           path: apps/desktop/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
           if-no-files-found: error
 

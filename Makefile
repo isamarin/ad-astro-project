@@ -68,7 +68,7 @@ setup-pi:
 
 tag:
 ifndef V
-	$(error Usage: make tag V=2026.08.0)
+	$(error Usage: make tag V=26.8.1)
 endif
 	git tag -a "v$(V)" -m "Release $(V)"
 	git push origin "v$(V)"

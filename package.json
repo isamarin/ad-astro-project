@@ -2,7 +2,7 @@
   "name": "astrostreamer",
   "type": "module",
   "private": true,
-  "version": "26.8.0",
+  "version": "26.8.1",
   "description": "Remote camera orchestrator (Tauri). Speaks lumina.camera.v1; adapters are separate.",
   "scripts": {
     "dev": "pnpm --filter desktop dev",

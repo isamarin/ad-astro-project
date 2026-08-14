@@ -1,45 +1,42 @@
-# Lumina · Star Watcher
+# Lumina
 
-Self-hosted remote control for a camera.
+**Star Watcher** — приложение для удалённой камеры: live view, экспозиция, кадр, таймлапс. macOS, Windows, Linux и Android 12+.
 
-The orchestrator describes a **camera interface**. It does not know Canon, Nikon, or gphoto2. Anything that implements `lumina.camera.v1` can drive the app.
-
-| Piece | Role |
-|-------|------|
-| **Tauri app** (`apps/desktop`) | Orchestrator UI — macOS / Windows / Linux / Android |
-| **Camera interface** (`packages/shared`) | `CameraAdapter` + HTTP protocol |
-| **Your adapter** | Separate process that speaks that protocol |
-| **MediaMTX** | Usually next to the adapter, for live view |
+Камеры в этом репозитории нет. Приложение говорит с адаптером по HTTP (`lumina.camera.v1`). Адаптер знает тело, объектив и USB; приложение — нет.
 
 ```
-Any camera ──► your adapter ──HTTP / WHEP──► Star Watcher
+камера ──► адаптер ──► Star Watcher
 ```
 
-## Write an adapter
+Готовый адаптер для Canon DSLR: [lumina-stream/canon-adapter](https://github.com/lumina-stream/canon-adapter).
 
-Spec: [`packages/shared/PROTOCOL.md`](packages/shared/PROTOCOL.md)
-
-Minimum: `GET /adapter` returns `{ "protocol": "lumina.camera.v1", "id", "name", "streamPath", "capabilities" }`. Then implement the routes your capabilities claim.
-
-A reference implementation: [lumina-stream/canon-adapter](https://github.com/lumina-stream/canon-adapter).
-
-In the app: Settings → **Remote adapter** → host and port → **Probe adapter**.
-
-## Repo layout
-
-```
-apps/desktop/          Tauri v2 + SvelteKit SPA
-packages/shared/       Camera interface + protocol
-```
-
-No camera agent lives here.
-
-## Quick start
+## Запуск
 
 ```bash
 pnpm install
-make dev-tauri          # or: pnpm dev:tauri
-# first launch: Simulator, or Remote adapter + probe
+make dev-tauri          # или: pnpm dev:tauri
 ```
 
-Vite only: `make dev` → http://localhost:1420
+При первом старте: **Simulator** (без железа) или **Remote adapter** → хост и порт → **Probe adapter**.
+
+Только браузер, без окна Tauri:
+
+```bash
+make dev                # http://localhost:1420
+```
+
+## Репозиторий
+
+```
+apps/desktop/           Star Watcher (Tauri v2 + SvelteKit)
+packages/shared/        протокол и типы
+```
+
+Спека адаптера: [`packages/shared/PROTOCOL.md`](packages/shared/PROTOCOL.md).
+
+## Сборка
+
+```bash
+make desktop-build
+make android-build      # Android 12+, aarch64
+```
